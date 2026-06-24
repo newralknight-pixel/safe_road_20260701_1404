@@ -1,14 +1,15 @@
 # Safe Road Detector
 
-Browser-based road pothole detector using a local Flask + ONNX Runtime backend and a pretrained YOLOv8 model.
+Browser-based road watch detector using a local Flask + ONNX Runtime backend and pretrained YOLO models.
 
 ## Model
 
-The app uses `models/pothole-yolov8s.onnx`, downloaded from:
+The app uses two ONNX models:
 
-https://huggingface.co/peterhdd/pothole-detection-yolov8
+- `models/wildlife-north-american-yolo26s.onnx`, downloaded from https://huggingface.co/UWyo/wildlife-north-american-wildlife
+- `models/trash-detection-yolo11n.onnx`, exported from https://huggingface.co/Alope/trash-detection-yolo11n
 
-The model detects one class: `pothole`.
+The app filters wildlife output to deer-like classes: `Mule Deer`, `Elk / Wapiti`, and `Moose`. It also detects trash classes: `glass`, `paper`, `plastic`, and `trash`.
 
 ## Run
 

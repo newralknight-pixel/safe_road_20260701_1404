@@ -1,0 +1,2 @@
+nc: 4
+names: ['glass', 'paper', 'plastic', 'trash']

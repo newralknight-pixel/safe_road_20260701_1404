@@ -1,4 +1,4 @@
-const CLASS_NAME = "pothole";
+const CLASS_NAME = "deer";
 
 const state = {
   running: false,
@@ -17,6 +17,7 @@ const els = {
   overlay: document.querySelector("#overlay"),
   empty: document.querySelector("#emptyState"),
   cameraBtn: document.querySelector("#cameraBtn"),
+  cameraSelect: document.querySelector("#cameraSelect"),
   stopBtn: document.querySelector("#stopBtn"),
   snapshotBtn: document.querySelector("#snapshotBtn"),
   fileInput: document.querySelector("#fileInput"),
@@ -52,6 +53,46 @@ function setModelStatus(kind, title, detail) {
   els.modelDetail.textContent = detail || "";
 }
 
+function getCameraErrorMessage(error) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return "This browser cannot access a webcam. Use Chrome/Edge on http://127.0.0.1:8000.";
+  }
+
+  if (error.name === "NotAllowedError" || error.name === "SecurityError") {
+    return "Camera permission is blocked. Click the camera/lock icon near the address bar and allow camera access.";
+  }
+
+  if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+    return "No webcam was found. Connect a camera, then try Start Webcam again.";
+  }
+
+  if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+    return "The webcam is already being used by another app. Close that app, then try again.";
+  }
+
+  return error.message || "Could not start webcam.";
+}
+
+async function refreshCameraList() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+
+  const previousValue = els.cameraSelect.value;
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const cameras = devices.filter((device) => device.kind === "videoinput");
+
+  els.cameraSelect.innerHTML = `<option value="">Default camera</option>`;
+  cameras.forEach((camera, index) => {
+    const option = document.createElement("option");
+    option.value = camera.deviceId;
+    option.textContent = camera.label || `Camera ${index + 1}`;
+    els.cameraSelect.append(option);
+  });
+
+  if ([...els.cameraSelect.options].some((option) => option.value === previousValue)) {
+    els.cameraSelect.value = previousValue;
+  }
+}
+
 async function checkBackend() {
   setModelStatus("loading", "Connecting backend", "Flask / ONNX Runtime");
   const response = await fetch("/health", { cache: "no-store" });
@@ -67,8 +108,8 @@ function setView(name) {
     item.classList.toggle("active", item.dataset.view === name);
   });
   const titles = {
-    detect: ["Live Road Detection", "Run local webcam inference with a pretrained YOLOv8 pothole model."],
-    events: ["Detection Events", "Logged pothole detections from webcam, images, and videos."],
+    detect: ["Live Road Watch", "Run local webcam inference for deer-like wildlife and roadside trash."],
+    events: ["Detection Events", "Logged wildlife and trash detections from webcam, images, and videos."],
     settings: ["Detector Settings", "Adjust thresholds, logging, and backend model path."],
   };
   document.querySelector("#viewTitle").textContent = titles[name][0];
@@ -180,7 +221,7 @@ function updateMetrics(detections, latencyMs) {
   els.currentCount.textContent = detections.length;
   els.bestScore.textContent = `${Math.round(best * 100)}%`;
   els.latency.textContent = `${Math.round(latencyMs)}ms`;
-  els.riskBadge.textContent = detections.length ? "Pothole" : "Clear";
+  els.riskBadge.textContent = detections.length ? "Detected" : "Clear";
   els.riskBadge.className = `badge ${detections.length ? "danger" : "ok"}`;
 }
 
@@ -243,10 +284,18 @@ async function detectionLoop() {
 async function startWebcam() {
   await checkBackend();
   stopDetection(false);
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error(getCameraErrorMessage(new Error("getUserMedia unavailable")));
+  }
+  await refreshCameraList();
+  const selectedCamera = els.cameraSelect.value;
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
+    video: selectedCamera
+      ? { deviceId: { exact: selectedCamera }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
     audio: false,
   });
+  await refreshCameraList();
   state.stream = stream;
   state.source = "webcam";
   els.video.srcObject = stream;
@@ -337,7 +386,7 @@ document.querySelectorAll(".nav-item").forEach((button) => {
 els.cameraBtn.addEventListener("click", () => {
   startWebcam().catch((error) => {
     console.error(error);
-    setModelStatus("error", "Webcam error", error.message);
+    setModelStatus("error", "Webcam error", getCameraErrorMessage(error));
   });
 });
 els.stopBtn.addEventListener("click", () => stopDetection(true));
@@ -352,10 +401,16 @@ els.clearEventsBtn.addEventListener("click", () => {
 });
 els.confidence.addEventListener("input", updateThresholdLabels);
 els.iou.addEventListener("input", updateThresholdLabels);
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+  navigator.mediaDevices.addEventListener("devicechange", () => {
+    refreshCameraList().catch((error) => console.warn(error));
+  });
+}
 els.reloadModelBtn.addEventListener("click", () => checkBackend().catch((error) => setModelStatus("error", "Backend error", error.message)));
 window.addEventListener("resize", resizeOverlay);
 
 updateThresholdLabels();
 renderEvents();
 resizeOverlay();
+refreshCameraList().catch((error) => console.warn(error));
 checkBackend().catch((error) => setModelStatus("error", "Backend offline", error.message));

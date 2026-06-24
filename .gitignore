@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+tmp/
+prints/
+models/*.pt
+test_images/trash_candidates/
+test_images/road_trash_candidates/

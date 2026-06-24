@@ -189,7 +189,18 @@ dt {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+  justify-content: flex-end;
+}
+
+.actions select {
+  min-height: 40px;
+  max-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: var(--surface);
 }
 
 .icon-button {
@@ -478,6 +489,16 @@ th {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .actions select {
+    max-width: none;
+    flex: 1 1 180px;
   }
 
   .control-row {

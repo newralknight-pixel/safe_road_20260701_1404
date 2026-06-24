@@ -12,16 +12,65 @@ from flask_cors import CORS
 
 
 ROOT = Path(__file__).resolve().parent
-MODEL_PATH = ROOT / "models" / "pothole-yolov8s.onnx"
 MODEL_SIZE = 640
-CLASS_NAME = "pothole"
+WILDLIFE_CLASS_NAMES = [
+    "Golden Eagle",
+    "Pronghorn",
+    "Bighorn Sheep",
+    "American Bison",
+    "Mule Deer",
+    "Elk / Wapiti",
+    "Coyote",
+    "Grizzly Bear",
+    "Gray Wolf",
+    "Moose",
+    "American Pika",
+    "Swift Fox",
+    "Mountain Lion",
+    "North American River Otter",
+    "American Black Bear",
+    "Bald Eagle",
+    "Red-tailed Hawk",
+    "Osprey",
+    "Greater Sage-Grouse",
+    "Trumpeter Swan",
+    "North American Beaver",
+    "Common Raven",
+    "Black-tailed Prairie Dog",
+    "American Badger",
+    "Bobcat",
+    "Black-tailed Jackrabbit",
+]
+TRASH_CLASS_NAMES = ["glass", "paper", "plastic", "trash"]
+MODEL_CONFIGS = [
+    {
+        "name": "wildlife-north-american-yolo26s.onnx",
+        "path": ROOT / "models" / "wildlife-north-american-yolo26s.onnx",
+        "class_names": WILDLIFE_CLASS_NAMES,
+        "target_class_ids": {4, 5, 9},
+    },
+    {
+        "name": "trash-detection-yolo11n.onnx",
+        "path": ROOT / "models" / "trash-detection-yolo11n.onnx",
+        "class_names": TRASH_CLASS_NAMES,
+        "target_class_ids": {0, 1, 2, 3},
+    },
+]
 
 app = Flask(__name__, static_folder=str(ROOT), static_url_path="")
 CORS(app)
 
-session = ort.InferenceSession(str(MODEL_PATH), providers=["CPUExecutionProvider"])
-input_name = session.get_inputs()[0].name
-output_name = session.get_outputs()[0].name
+detectors = []
+for config in MODEL_CONFIGS:
+    session = ort.InferenceSession(str(config["path"]), providers=["CPUExecutionProvider"])
+    detectors.append(
+        {
+            **config,
+            "session": session,
+            "input_name": session.get_inputs()[0].name,
+            "output_name": session.get_outputs()[0].name,
+        }
+    )
 
 
 def letterbox(image: np.ndarray) -> tuple[np.ndarray, float, int, int]:
@@ -85,22 +134,55 @@ def nms(boxes: list[dict], iou_threshold: float) -> list[dict]:
     return selected
 
 
-def decode(output: np.ndarray, meta: dict[str, float], conf: float, iou_threshold: float) -> list[dict]:
+def decode(
+    output: np.ndarray,
+    meta: dict[str, float],
+    conf: float,
+    iou_threshold: float,
+    class_names: list[str],
+    target_class_ids: set[int],
+) -> list[dict]:
     rows = rows_from_output(output)
     boxes: list[dict] = []
 
     for row in rows:
         if row.shape[0] < 5:
             continue
-        score = float(row[4]) if row.shape[0] == 5 else float(np.max(row[4:]))
-        if score < conf:
-            continue
 
-        cx, cy, width, height = map(float, row[:4])
-        x1 = (cx - width / 2 - meta["pad_x"]) / meta["scale"]
-        y1 = (cy - height / 2 - meta["pad_y"]) / meta["scale"]
-        x2 = (cx + width / 2 - meta["pad_x"]) / meta["scale"]
-        y2 = (cy + height / 2 - meta["pad_y"]) / meta["scale"]
+        if row.shape[0] == 6:
+            x1, y1, x2, y2 = map(float, row[:4])
+            score = float(row[4])
+            class_id = int(row[5])
+            if score < conf or class_id not in target_class_ids:
+                continue
+
+            x1 = (x1 - meta["pad_x"]) / meta["scale"]
+            y1 = (y1 - meta["pad_y"]) / meta["scale"]
+            x2 = (x2 - meta["pad_x"]) / meta["scale"]
+            y2 = (y2 - meta["pad_y"]) / meta["scale"]
+        elif row.shape[0] == 5:
+            class_id = 0
+            score = float(row[4])
+            if score < conf or class_id not in target_class_ids:
+                continue
+
+            cx, cy, width, height = map(float, row[:4])
+            x1 = (cx - width / 2 - meta["pad_x"]) / meta["scale"]
+            y1 = (cy - height / 2 - meta["pad_y"]) / meta["scale"]
+            x2 = (cx + width / 2 - meta["pad_x"]) / meta["scale"]
+            y2 = (cy + height / 2 - meta["pad_y"]) / meta["scale"]
+        else:
+            scores = row[4:]
+            class_id = int(np.argmax(scores))
+            score = float(scores[class_id])
+            if score < conf or class_id not in target_class_ids:
+                continue
+
+            cx, cy, width, height = map(float, row[:4])
+            x1 = (cx - width / 2 - meta["pad_x"]) / meta["scale"]
+            y1 = (cy - height / 2 - meta["pad_y"]) / meta["scale"]
+            x2 = (cx + width / 2 - meta["pad_x"]) / meta["scale"]
+            y2 = (cy + height / 2 - meta["pad_y"]) / meta["scale"]
 
         x1 = max(0.0, min(float(meta["width"]), x1))
         y1 = max(0.0, min(float(meta["height"]), y1))
@@ -109,7 +191,7 @@ def decode(output: np.ndarray, meta: dict[str, float], conf: float, iou_threshol
 
         boxes.append(
             {
-                "className": CLASS_NAME,
+                "className": class_names[class_id],
                 "score": score,
                 "x": x1,
                 "y": y1,
@@ -148,10 +230,17 @@ def health():
     return jsonify(
         {
             "ok": True,
-            "model": str(MODEL_PATH.name),
-            "input": input_name,
-            "output": output_name,
-            "provider": session.get_providers()[0],
+            "model": ", ".join(detector["name"] for detector in detectors),
+            "models": [
+                {
+                    "name": detector["name"],
+                    "input": detector["input_name"],
+                    "output": detector["output_name"],
+                    "provider": detector["session"].get_providers()[0],
+                }
+                for detector in detectors
+            ],
+            "provider": detectors[0]["session"].get_providers()[0],
         }
     )
 
@@ -163,8 +252,20 @@ def detect():
     iou_threshold = float(request.form.get("iou", request.args.get("iou", 0.45)))
     image = read_image()
     tensor, meta = preprocess(image)
-    output = session.run([output_name], {input_name: tensor})[0]
-    detections = decode(output, meta, conf, iou_threshold)
+    detections = []
+    for detector in detectors:
+        output = detector["session"].run([detector["output_name"]], {detector["input_name"]: tensor})[0]
+        detections.extend(
+            decode(
+                output,
+                meta,
+                conf,
+                iou_threshold,
+                detector["class_names"],
+                detector["target_class_ids"],
+            )
+        )
+    detections = sorted(detections, key=lambda item: item["score"], reverse=True)[:20]
     return jsonify(
         {
             "detections": detections,
