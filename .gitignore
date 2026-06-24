@@ -8,3 +8,6 @@ prints/
 models/*.pt
 test_images/trash_candidates/
 test_images/road_trash_candidates/
+tools/
+*.zip
+cloudflared.log

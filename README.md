@@ -40,6 +40,29 @@ On Windows, you can also double-click:
 start_safe_road.bat
 ```
 
+## Public temporary URL
+
+To use the app from another laptop without moving this desktop, keep this desktop powered on and connected to the internet, then double-click:
+
+```text
+start_public_tunnel.bat
+```
+
+The script starts the local Flask server, downloads Cloudflare Tunnel if needed, and prints a public URL like:
+
+```text
+https://example-name.trycloudflare.com
+```
+
+Open that URL from the other laptop. Keep both command windows open while using the app. The URL is temporary and may change each time the tunnel is restarted.
+
+Notes:
+
+- Use Chrome or Edge on the remote laptop.
+- Allow camera permission in the browser.
+- Pico USB hardware only works on the computer it is plugged into.
+- The desktop must stay on while the public URL is being used.
+
 ## GitHub
 
 The target repository is currently empty:
