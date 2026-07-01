@@ -1,4 +1,4 @@
-const CLASS_NAME = "deer";
+const CLASS_NAME = "road hazard";
 
 const state = {
   running: false,
@@ -108,8 +108,8 @@ function setView(name) {
     item.classList.toggle("active", item.dataset.view === name);
   });
   const titles = {
-    detect: ["Live Road Watch", "Run local webcam inference for deer-like wildlife and roadside trash."],
-    events: ["Detection Events", "Logged wildlife and trash detections from webcam, images, and videos."],
+    detect: ["Live Road Watch", "Run local webcam inference for deer-like wildlife, roadside trash, and potholes."],
+    events: ["Detection Events", "Logged wildlife, trash, and pothole detections from webcam, images, and videos."],
     settings: ["Detector Settings", "Adjust thresholds, logging, and backend model path."],
   };
   document.querySelector("#viewTitle").textContent = titles[name][0];

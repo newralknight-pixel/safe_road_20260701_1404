@@ -4,12 +4,13 @@ Browser-based road watch detector using a local Flask + ONNX Runtime backend and
 
 ## Model
 
-The app uses two ONNX models:
+The app uses three ONNX models:
 
 - `models/wildlife-north-american-yolo26s.onnx`, downloaded from https://huggingface.co/UWyo/wildlife-north-american-wildlife
 - `models/trash-detection-yolo11n.onnx`, exported from https://huggingface.co/Alope/trash-detection-yolo11n
+- `models/pothole-yolov8s.onnx`, an Ultralytics YOLOv8s pothole detector already included in this project
 
-The app filters wildlife output to deer-like classes: `Mule Deer`, `Elk / Wapiti`, and `Moose`. It also detects trash classes: `glass`, `paper`, `plastic`, and `trash`.
+The app filters wildlife output to deer-like classes: `Mule Deer`, `Elk / Wapiti`, and `Moose`. It also detects trash classes: `glass`, `paper`, `plastic`, and `trash`, plus `pothole`.
 
 ## Run
 

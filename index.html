@@ -27,7 +27,7 @@
         <span id="modelLed" class="led loading"></span>
         <div>
           <strong id="modelState">Loading model</strong>
-          <span id="modelDetail">wildlife + trash models</span>
+          <span id="modelDetail">wildlife + trash + pothole models</span>
         </div>
       </div>
     </aside>
@@ -36,7 +36,7 @@
       <header class="topbar">
         <div>
           <h1 id="viewTitle">Live Road Watch</h1>
-          <p id="viewSubtitle">Run local webcam inference for deer-like wildlife and roadside trash.</p>
+          <p id="viewSubtitle">Run local webcam inference for deer-like wildlife, roadside trash, and potholes.</p>
         </div>
         <div class="actions">
           <select id="cameraSelect" aria-label="Camera">
@@ -119,9 +119,9 @@
               <h2>Model</h2>
             </div>
             <dl>
-              <div><dt>Source</dt><dd>UWyo wildlife + Alope trash YOLO</dd></div>
+              <div><dt>Source</dt><dd>UWyo wildlife + Alope trash + pothole YOLO</dd></div>
               <div><dt>Runtime</dt><dd>Flask / ONNX Runtime</dd></div>
-              <div><dt>Class</dt><dd>Mule Deer, Elk / Wapiti, Moose, glass, paper, plastic, trash</dd></div>
+              <div><dt>Class</dt><dd>Mule Deer, Elk / Wapiti, Moose, glass, paper, plastic, trash, pothole</dd></div>
               <div><dt>Input</dt><dd>640 × 640 RGB</dd></div>
             </dl>
           </section>
@@ -165,7 +165,7 @@
           </label>
           <label>
             <span>Model Path</span>
-              <input id="modelPath" value="server.py / wildlife + trash ONNX models" disabled>
+              <input id="modelPath" value="server.py / wildlife + trash + pothole ONNX models" disabled>
           </label>
           <button id="reloadModelBtn" type="button">Reload Model</button>
         </form>

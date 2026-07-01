@@ -42,6 +42,7 @@ WILDLIFE_CLASS_NAMES = [
     "Black-tailed Jackrabbit",
 ]
 TRASH_CLASS_NAMES = ["glass", "paper", "plastic", "trash"]
+POTHOLE_CLASS_NAMES = ["pothole"]
 MODEL_CONFIGS = [
     {
         "name": "wildlife-north-american-yolo26s.onnx",
@@ -54,6 +55,12 @@ MODEL_CONFIGS = [
         "path": ROOT / "models" / "trash-detection-yolo11n.onnx",
         "class_names": TRASH_CLASS_NAMES,
         "target_class_ids": {0, 1, 2, 3},
+    },
+    {
+        "name": "pothole-yolov8s.onnx",
+        "path": ROOT / "models" / "pothole-yolov8s.onnx",
+        "class_names": POTHOLE_CLASS_NAMES,
+        "target_class_ids": {0},
     },
 ]
 
