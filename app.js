@@ -42,7 +42,10 @@ const els = {
   eventCooldown: document.querySelector("#eventCooldown"),
   reloadModelBtn: document.querySelector("#reloadModelBtn"),
   phoneUrl: document.querySelector("#phoneUrl"),
+  installBtn: document.querySelector("#installBtn"),
 };
+
+let installPrompt = null;
 
 const captureCanvas = document.createElement("canvas");
 const captureCtx = captureCanvas.getContext("2d", { willReadFrequently: true });
@@ -108,6 +111,11 @@ async function checkNetwork() {
   if (!response.ok) throw new Error(`Network endpoint returned ${response.status}`);
   const network = await response.json();
   els.phoneUrl.textContent = network.phoneUrl;
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  await navigator.serviceWorker.register("/sw.js");
 }
 
 function setView(name) {
@@ -416,6 +424,20 @@ if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
   });
 }
 els.reloadModelBtn.addEventListener("click", () => checkBackend().catch((error) => setModelStatus("error", "Backend error", error.message)));
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  installPrompt = event;
+  if (els.installBtn) els.installBtn.hidden = false;
+});
+if (els.installBtn) {
+  els.installBtn.addEventListener("click", async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    els.installBtn.hidden = true;
+  });
+}
 window.addEventListener("resize", resizeOverlay);
 
 updateThresholdLabels();
@@ -426,3 +448,4 @@ checkBackend().catch((error) => setModelStatus("error", "Backend offline", error
 checkNetwork().catch((error) => {
   if (els.phoneUrl) els.phoneUrl.textContent = error.message;
 });
+registerServiceWorker().catch((error) => console.warn(error));

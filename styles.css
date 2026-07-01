@@ -53,6 +53,13 @@ button:hover,
   color: white;
 }
 
+.install-button {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: white;
+  font-weight: 700;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -511,6 +518,12 @@ th {
   .actions select {
     max-width: none;
     flex: 1 1 180px;
+  }
+
+  .upload-button,
+  .install-button,
+  .primary {
+    flex: 1 1 150px;
   }
 
   .control-row {

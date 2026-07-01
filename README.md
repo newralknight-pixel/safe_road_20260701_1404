@@ -47,6 +47,12 @@ The phone and computer must be on the same Wi-Fi network. On the phone, use **Re
 
 Note: live **Start Webcam** access from a phone may be blocked on plain HTTP. Use **Record / Upload** for the reliable phone workflow, or use the public tunnel option below for HTTPS camera access.
 
+## Install as an app
+
+Safe Road is a Progressive Web App. Open the computer or phone URL in Chrome or Edge, then use **Install App** or the browser menu's **Add to Home screen** action. The installed app still needs this Flask server running because model inference happens on the computer.
+
+For a real install prompt on a phone, use the HTTPS public tunnel URL. Plain same-Wi-Fi HTTP usually works for **Record / Upload**, but mobile browsers often require HTTPS before they allow PWA installation or live camera permissions.
+
 On Windows, you can also double-click:
 
 ```text
