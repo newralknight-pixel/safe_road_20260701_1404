@@ -125,8 +125,8 @@ function setView(name) {
     item.classList.toggle("active", item.dataset.view === name);
   });
   const titles = {
-    detect: ["Live Road Watch", "Run local webcam inference for wildlife, roadside trash, and potholes."],
-    events: ["Detection Events", "Logged wildlife, trash, and pothole detections from webcam, images, and videos."],
+    detect: ["Live Road Watch", "Run local webcam inference for wildlife, roadside litter, and potholes."],
+    events: ["Detection Events", "Logged wildlife, litter, and pothole detections from webcam, images, and videos."],
     settings: ["Detector Settings", "Adjust thresholds, logging, and backend model path."],
   };
   document.querySelector("#viewTitle").textContent = titles[name][0];

@@ -43,7 +43,7 @@ WILDLIFE_CLASS_NAMES = [
     "Bobcat",
     "Black-tailed Jackrabbit",
 ]
-TRASH_CLASS_NAMES = ["glass", "paper", "plastic", "trash"]
+LITTER_CLASS_NAMES = ["Litter"]
 POTHOLE_CLASS_NAMES = ["pothole"]
 MODEL_CONFIGS = [
     {
@@ -54,11 +54,11 @@ MODEL_CONFIGS = [
         "min_conf_by_class_id": {class_id: 0.65 for class_id in range(len(WILDLIFE_CLASS_NAMES))},
     },
     {
-        "name": "trash-detection-yolo11n.onnx",
-        "path": ROOT / "models" / "trash-detection-yolo11n.onnx",
-        "class_names": TRASH_CLASS_NAMES,
-        "target_class_ids": {0, 2, 3},
-        "min_conf_by_class_id": {0: 0.80, 2: 0.80, 3: 0.85},
+        "name": "litter-detection-yolov8.onnx",
+        "path": ROOT / "models" / "litter-detection-yolov8.onnx",
+        "class_names": LITTER_CLASS_NAMES,
+        "target_class_ids": {0},
+        "min_conf_by_class_id": {0: 0.75},
         "min_center_y_ratio": 0.45,
     },
     {
